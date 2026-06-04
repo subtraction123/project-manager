@@ -370,7 +370,8 @@ async function doConvert() {
     convertingItem.value = null
   } catch (e: any) {
     console.error('doConvert error:', e)
-    ui.addToast({ type: 'error', message: e.message || '转化失败，请重试' })
+    const msg = typeof e === 'string' ? e : (e?.message || String(e || '转化失败，请重试'))
+    ui.addToast({ type: 'error', message: msg })
   }
 }
 

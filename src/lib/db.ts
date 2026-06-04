@@ -1,5 +1,4 @@
 import Database from '@tauri-apps/plugin-sql'
-import { v4 as uuidv4 } from 'uuid'
 
 let db: Database | null = null
 
@@ -144,7 +143,7 @@ export function useDB() {
   }
 
   function generateId(): string {
-    return uuidv4()
+    return crypto.randomUUID()
   }
 
   function now(): string {
