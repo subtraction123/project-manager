@@ -349,7 +349,7 @@ async function doConvert() {
       const task = await taskStore.createTask({
         title: convertData.name,
         description: convertData.description,
-        project_id: '',
+        project_id: null,
         status: 'doing',
         due_date: convertData.due_date || null,
       })

@@ -229,7 +229,7 @@ function toggleScheduledExpand(name: string) {
 
 const unassignedProjects = computed(() => {
   const assignedProjectIds = new Set(allReleases.value.map(r => r.project_id))
-  return allProjects.value.filter(p => !assignedProjectIds.has(p.id) && p.status !== 'archived')
+  return allProjects.value.filter(p => !assignedProjectIds.has(p.id) && p.status === 'active')
 })
 
 interface UnassignedTreeNode {

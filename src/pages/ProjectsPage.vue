@@ -31,8 +31,11 @@
             {{ node.children.length > 0 ? (expanded.has(node.project.id) ? '▼' : '▶') : '' }}
           </div>
           <div class="flex-1 min-w-0">
-            <div class="text-sm font-semibold text-text-primary" :class="{ 'line-through text-text-muted': node.project.phase === '上线' }">{{ node.project.name }}</div>
+            <div class="text-sm font-semibold text-text-primary" :class="{ 'line-through text-text-muted': node.project.phase === '上线' || node.project.status === 'terminated' }">{{ node.project.name }}</div>
             <div class="flex items-center gap-2 mt-1">
+              <span v-if="node.project.status === 'terminated'" class="text-xs px-2 py-0.5 rounded font-medium bg-red-50 text-red-500">
+                已终止
+              </span>
               <span :class="['text-xs px-2 py-0.5 rounded font-medium', phaseTagClass(node.project.phase)]">
                 {{ node.project.phase || '需求调研' }}
               </span>
@@ -53,6 +56,9 @@
             <button v-if="node.project.status !== 'archived'" @click.stop="archiveProject(node.project.id)" class="px-3 py-1.5 border border-border-color rounded-md text-xs text-text-secondary hover:border-warning hover:text-warning transition-colors">
               归档
             </button>
+            <button @click.stop="deleteProject(node.project.id)" class="px-3 py-1.5 border border-border-color rounded-md text-xs text-text-secondary hover:border-danger hover:text-danger transition-colors">
+              删除
+            </button>
           </div>
         </div>
 
@@ -62,8 +68,11 @@
             class="flex items-center px-4 py-3 pl-10 hover:bg-gray-100 transition-colors cursor-pointer border-b border-gray-100 last:border-0"
             @click="$router.push(`/projects/${child.id}`)">
             <div class="flex-1 min-w-0">
-              <div class="text-sm font-medium text-text-primary" :class="{ 'line-through text-text-muted': child.phase === '上线' }">{{ child.name }}</div>
+              <div class="text-sm font-medium text-text-primary" :class="{ 'line-through text-text-muted': child.phase === '上线' || child.status === 'terminated' }">{{ child.name }}</div>
               <div class="flex items-center gap-2 mt-1">
+                <span v-if="child.status === 'terminated'" class="text-xs px-2 py-0.5 rounded font-medium bg-red-50 text-red-500">
+                  已终止
+                </span>
                 <span :class="['text-xs px-2 py-0.5 rounded font-medium', phaseTagClass(child.phase)]">
                   {{ child.phase || '需求调研' }}
                 </span>
@@ -79,6 +88,9 @@
               </div>
               <button @click.stop="$router.push(`/projects/${child.id}`)" class="px-3 py-1.5 border border-border-color rounded-md text-xs text-text-secondary hover:border-primary hover:text-primary transition-colors">
                 查看详情
+              </button>
+              <button @click.stop="deleteProject(child.id)" class="px-3 py-1.5 border border-border-color rounded-md text-xs text-text-secondary hover:border-danger hover:text-danger transition-colors">
+                删除
               </button>
             </div>
           </div>
@@ -167,6 +179,7 @@ const filterTabs = [
   { key: '方案设计', label: '方案设计' },
   { key: '实施配置', label: '实施配置' },
   { key: '上线', label: '上线' },
+  { key: 'terminated', label: '已终止' },
   { key: 'archived', label: '已归档' },
 ]
 
@@ -179,7 +192,8 @@ const phases = [
 
 const filteredProjects = computed(() => {
   if (filterPhase.value === 'risk') return projectStore.projects.filter(p => riskProjectIds.value.has(p.id))
-  if (filterPhase.value === 'active') return projectStore.projects.filter(p => p.status !== 'archived')
+  if (filterPhase.value === 'active') return projectStore.projects.filter(p => p.status === 'active')
+  if (filterPhase.value === 'terminated') return projectStore.projects.filter(p => p.status === 'terminated')
   if (filterPhase.value === 'all') return projectStore.projects
   if (filterPhase.value === 'archived') return projectStore.projects.filter(p => p.status === 'archived')
   return projectStore.projects.filter(p => (p.phase || '需求调研') === filterPhase.value)
@@ -223,7 +237,7 @@ const newProject = reactive({
 })
 
 function getPhaseProgress(project: { status?: string; phase?: string }): number {
-  if (project.status === 'archived') return 100
+  if (project.status === 'archived' || project.status === 'terminated') return 100
   const map: Record<string, number> = {
     '需求调研': 10,
     '方案设计': 30,
@@ -240,6 +254,7 @@ function phaseTagClass(phase?: string) {
     '实施配置': 'bg-cyan-50 text-cyan-500',
     '上线': 'bg-green-50 text-green-500',
   }
+  if (phase === 'terminated') return 'bg-red-50 text-red-500'
   return map[phase || ''] || map['需求调研']
 }
 
@@ -276,6 +291,11 @@ async function createProject() {
 async function archiveProject(id: string) {
   await projectStore.archiveProject(id)
   ui.addToast({ type: 'info', message: '项目已归档' })
+}
+
+async function deleteProject(id: string) {
+  await projectStore.deleteProject(id)
+  ui.addToast({ type: 'success', message: '项目已删除' })
 }
 
 onMounted(async () => {

@@ -202,10 +202,10 @@ const dailyCount = computed(() => {
   return dailyStore.items.filter(i => i.record_date === today && !i.is_completed).length
 })
 const doingCount = computed(() => taskStore.tasks.filter(t => t.status === 'doing').length)
-const activeProjectCount = computed(() => projectStore.projects.filter(p => p.status !== 'archived').length)
+const activeProjectCount = computed(() => projectStore.projects.filter(p => p.status === 'active').length)
 const riskCount = ref(0)
 const draftReleaseCount = computed(() => releaseStore.releases.filter(r => r.status === 'draft').length)
-const activeProjects = computed(() => projectStore.projects.filter(p => p.status !== 'archived' && !p.parent_id))
+const activeProjects = computed(() => projectStore.projects.filter(p => p.status === 'active' && !p.parent_id))
 const activeTasks = computed(() => taskStore.tasks.filter(t => t.status === 'doing' && t.due_date))
 
 // Project Gantt chart

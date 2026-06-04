@@ -13,8 +13,9 @@ export const useTaskStore = defineStore('task', () => {
   const byProject = computed(() => {
     const map: Record<string, Task[]> = {}
     for (const t of tasks.value) {
-      if (!map[t.project_id]) map[t.project_id] = []
-      map[t.project_id].push(t)
+      const key = t.project_id || '__unassigned__'
+      if (!map[key]) map[key] = []
+      map[key].push(t)
     }
     return map
   })
@@ -57,7 +58,7 @@ export const useTaskStore = defineStore('task', () => {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
-        data.project_id || '',
+        data.project_id || null,
         data.title || '',
         data.description || '',
         data.status || 'pending',
@@ -70,7 +71,7 @@ export const useTaskStore = defineStore('task', () => {
     )
     const task: Task = {
       id,
-      project_id: data.project_id || '',
+      project_id: data.project_id || null,
       title: data.title || '',
       description: data.description || '',
       status: (data.status as Task['status']) || 'pending',

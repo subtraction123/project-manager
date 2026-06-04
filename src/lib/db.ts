@@ -39,7 +39,7 @@ async function createTables(database: Database) {
 
     CREATE TABLE IF NOT EXISTS tasks (
       id TEXT PRIMARY KEY,
-      project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
       title TEXT NOT NULL,
       description TEXT DEFAULT '',
       status TEXT DEFAULT 'pending',
@@ -121,10 +121,45 @@ async function createTables(database: Database) {
   `)
 }
 
+async function migrate(database: Database) {
+  // Migration 001: make tasks.project_id nullable
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS _migrations (name TEXT PRIMARY KEY);
+  `)
+  const done = await database.select<{ cnt: number }[]>(
+    "SELECT COUNT(*) as cnt FROM _migrations WHERE name = '001_nullable_task_project_id'"
+  )
+  if ((done as any)[0]?.cnt === 0) {
+    await database.execute(`
+      CREATE TABLE IF NOT EXISTS tasks_new (
+        id TEXT PRIMARY KEY,
+        project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
+        title TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        status TEXT DEFAULT 'pending',
+        priority TEXT DEFAULT 'medium',
+        assignee TEXT DEFAULT '',
+        due_date TEXT,
+        completed_at TEXT,
+        created_at TEXT DEFAULT (datetime('now','localtime')),
+        updated_at TEXT DEFAULT (datetime('now','localtime'))
+      );
+      INSERT INTO tasks_new SELECT
+        id, CASE WHEN project_id = '' THEN NULL ELSE project_id END,
+        title, description, status, priority, assignee, due_date, completed_at, created_at, updated_at
+      FROM tasks;
+      DROP TABLE tasks;
+      ALTER TABLE tasks_new RENAME TO tasks;
+      INSERT INTO _migrations (name) VALUES ('001_nullable_task_project_id');
+    `)
+  }
+}
+
 export function useDB() {
   async function init(): Promise<void> {
     db = await Database.load('sqlite:project-manager.db')
     await createTables(db)
+    await migrate(db)
   }
 
   async function query<T = any>(sql: string, params: any[] = []): Promise<T[]> {

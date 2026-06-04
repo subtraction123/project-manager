@@ -10,7 +10,7 @@ export const useProjectStore = defineStore('project', () => {
 
   const { query, run, generateId, now } = useDB()
 
-  const activeProjects = computed(() => projects.value.filter((p) => p.status !== 'archived'))
+  const activeProjects = computed(() => projects.value.filter((p) => p.status === 'active'))
 
   async function fetchProjects() {
     loading.value = true
@@ -59,7 +59,7 @@ export const useProjectStore = defineStore('project', () => {
       start_date: data.start_date || null,
       phase: data.phase || '需求调研',
       parent_id: data.parent_id || null,
-      status: (data.status as 'active' | 'archived') || 'active',
+      status: (data.status as Project['status']) || 'active',
       created_at: ts,
       updated_at: ts,
     }
@@ -95,6 +95,10 @@ export const useProjectStore = defineStore('project', () => {
   }
 
   async function deleteProject(id: string) {
+    const children = projects.value.filter(p => p.parent_id === id)
+    for (const child of children) {
+      await deleteProject(child.id)
+    }
     await run('DELETE FROM projects WHERE id = ?', [id])
     projects.value = projects.value.filter((p) => p.id !== id)
   }

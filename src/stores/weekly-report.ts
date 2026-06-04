@@ -64,7 +64,7 @@ export const useWeeklyReportStore = defineStore('weeklyReport', () => {
     )
 
     const projects = await query<any>(
-      `SELECT * FROM projects WHERE status != 'archived' OR status IS NULL ORDER BY created_at DESC`,
+      `SELECT * FROM projects WHERE (status != 'archived' AND status != 'terminated') OR status IS NULL ORDER BY created_at DESC`,
     )
 
     const allMilestones = await query<any>(

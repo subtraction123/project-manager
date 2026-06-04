@@ -21,7 +21,7 @@ export interface Project {
   start_date: string | null
   phase: string
   parent_id: string | null
-  status: 'active' | 'archived'
+  status: 'active' | 'archived' | 'terminated'
   created_at: string
   updated_at: string
 }
@@ -41,7 +41,7 @@ export interface ProjectRisk {
 
 export interface Task {
   id: string
-  project_id: string
+  project_id: string | null
   title: string
   description: string
   status: 'pending' | 'doing' | 'done'

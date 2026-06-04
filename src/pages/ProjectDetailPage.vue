@@ -104,6 +104,14 @@
             </div>
           </div>
         </div>
+        <div>
+          <label class="block text-sm font-medium text-text-primary mb-2">项目状态</label>
+          <select v-model="editForm.status" class="w-full px-3 py-2.5 border border-[#e0e4e8] rounded-lg text-sm focus:border-primary focus:outline-none bg-[#fafbfc]">
+            <option value="active">进行中</option>
+            <option value="terminated">已终止</option>
+            <option value="archived">已归档</option>
+          </select>
+        </div>
         <div class="flex justify-end gap-3 pt-3 border-t border-gray-100">
           <button @click="toggleEditMode" class="px-4 py-2 border border-[#e0e4e8] rounded-lg text-sm text-text-secondary hover:bg-gray-50">取消</button>
           <button @click="saveProjectInfo" class="px-4 py-2 bg-gradient-to-br from-[#0052CC] to-[#0077FF] text-white rounded-lg text-sm font-medium hover:opacity-90">保存</button>
@@ -255,7 +263,7 @@ import { useDB } from '@/lib/db'
 import { useProjectStore } from '@/stores/project'
 import { useMilestoneStore } from '@/stores/milestone'
 import { useUIStore } from '@/stores/ui'
-import type { Milestone, ProjectRisk } from '@/types'
+import type { Milestone, ProjectRisk, Project } from '@/types'
 import BaseModal from '@/components/shared/BaseModal.vue'
 
 const route = useRoute()
@@ -289,7 +297,7 @@ const childProjects = computed(() => {
   return projectStore.projects.filter(p => p.parent_id === projectId.value)
 })
 
-const editForm = reactive({ name: '', description: '', estimated_end_date: '', development_cycle: '', phase: '', parent_id: '' })
+const editForm = reactive({ name: '', description: '', estimated_end_date: '', development_cycle: '', phase: '', parent_id: '', status: 'active' as Project['status'] })
 
 const availableParents = computed(() => {
   return projectStore.projects.filter(p => p.id !== projectId.value && p.phase !== '上线')
@@ -332,6 +340,7 @@ function toggleEditMode() {
       editForm.development_cycle = project.value.development_cycle
       editForm.phase = project.value.phase || '需求调研'
       editForm.parent_id = project.value.parent_id || ''
+      editForm.status = (project.value.status as Project['status']) || 'active'
       parentSearchText.value = ''
     }
     editingInfo.value = true
