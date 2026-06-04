@@ -1,8 +1,8 @@
 <template>
   <aside :class="['bg-bg-sidebar text-white flex flex-col transition-all duration-300', collapsed ? 'w-16' : 'w-56']">
     <div class="flex items-center h-16 px-4 border-b border-white/10">
-      <span v-if="!collapsed" class="text-lg font-bold whitespace-nowrap">项目管理工具</span>
-      <span v-else class="text-lg font-bold">PM</span>
+      <span v-if="!collapsed" class="text-lg font-bold whitespace-nowrap">Mbrains</span>
+      <span v-else class="text-lg font-bold">MB</span>
     </div>
     <nav class="flex-1 py-4">
       <router-link

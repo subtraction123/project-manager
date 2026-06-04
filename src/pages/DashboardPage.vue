@@ -2,7 +2,7 @@
   <div>
     <!-- Dark Page Header -->
     <div class="flex items-center justify-between mb-6 px-6 py-4 rounded-lg bg-[#172B4D] text-white">
-      <h2 class="text-lg font-semibold">项目管理工具</h2>
+      <h2 class="text-lg font-semibold">Mbrains</h2>
     </div>
 
     <!-- Stats Cards -->

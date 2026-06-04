@@ -24,6 +24,6 @@ import dayjs from 'dayjs'
 const route = useRoute()
 const ui = useUIStore()
 
-const pageTitle = computed(() => (route.meta.title as string) || '项目管理工具')
+const pageTitle = computed(() => (route.meta.title as string) || 'Mbrains')
 const today = computed(() => dayjs().format('YYYY年MM月DD日 dddd'))
 </script>
