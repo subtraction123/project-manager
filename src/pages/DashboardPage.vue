@@ -92,6 +92,7 @@
           当前时间
         </div>
         <div class="flex items-center gap-2 text-xs ml-auto">
+          <span class="text-gray-500">● 待排期</span>
           <span class="text-blue-500">● 需求调研</span>
           <span class="text-purple-500">● 方案设计</span>
           <span class="text-cyan-500">● 实施配置</span>
@@ -205,7 +206,7 @@ const doingCount = computed(() => taskStore.tasks.filter(t => t.status === 'doin
 const activeProjectCount = computed(() => projectStore.projects.filter(p => p.status === 'active').length)
 const riskCount = ref(0)
 const draftReleaseCount = computed(() => releaseStore.releases.filter(r => r.status === 'draft').length)
-const activeProjects = computed(() => projectStore.projects.filter(p => p.status === 'active' && !p.parent_id))
+const activeProjects = computed(() => projectStore.projects.filter(p => p.status === 'active' && !p.parent_id && p.phase !== '待排期'))
 const activeTasks = computed(() => taskStore.tasks.filter(t => t.status === 'doing' && t.due_date))
 
 // Project Gantt chart
@@ -316,6 +317,7 @@ function formatShortDate(date: string) {
 
 function phaseColorClass(phase?: string) {
   const map: Record<string, string> = {
+    '待排期': 'text-gray-500',
     '需求调研': 'text-blue-500',
     '方案设计': 'text-purple-500',
     '实施配置': 'text-cyan-500',

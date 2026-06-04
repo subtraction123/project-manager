@@ -134,6 +134,14 @@
             <textarea v-model="convertData.description" rows="3" class="w-full px-3 py-2.5 border border-[#e0e4e8] rounded-lg text-sm focus:border-primary focus:outline-none bg-[#fafbfc] resize-none" placeholder="请输入任务描述..."></textarea>
           </div>
           <div>
+            <label class="block text-sm font-medium text-text-primary mb-1.5">优先级</label>
+            <select v-model="convertData.priority" class="w-full px-3 py-2.5 border border-[#e0e4e8] rounded-lg text-sm focus:border-primary focus:outline-none bg-[#fafbfc]">
+              <option value="low">低</option>
+              <option value="medium">中</option>
+              <option value="high">高</option>
+            </select>
+          </div>
+          <div>
             <label class="block text-sm font-medium text-text-primary mb-1.5">截止时间</label>
             <input v-model="convertData.due_date" type="date" class="w-full px-3 py-2.5 border border-[#e0e4e8] rounded-lg text-sm focus:border-primary focus:outline-none bg-[#fafbfc]">
           </div>
@@ -173,12 +181,20 @@
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-text-primary mb-1.5">预计完成时间 <span class="text-red-500">*</span></label>
+            <label class="block text-sm font-medium text-text-primary mb-1.5">预计完成时间</label>
             <input v-model="convertData.estimated_end_date" type="date" class="w-full px-3 py-2.5 border border-[#e0e4e8] rounded-lg text-sm focus:border-primary focus:outline-none bg-[#fafbfc]">
           </div>
           <div>
-            <label class="block text-sm font-medium text-text-primary mb-1.5">开发周期（人天） <span class="text-red-500">*</span></label>
+            <label class="block text-sm font-medium text-text-primary mb-1.5">开发周期（人天）</label>
             <input v-model="convertData.development_cycle" class="w-full px-3 py-2.5 border border-[#e0e4e8] rounded-lg text-sm focus:border-primary focus:outline-none bg-[#fafbfc]" placeholder="如：15人天">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-text-primary mb-1.5">优先级</label>
+            <select v-model="convertData.priority" class="w-full px-3 py-2.5 border border-[#e0e4e8] rounded-lg text-sm focus:border-primary focus:outline-none bg-[#fafbfc]">
+              <option value="low">低</option>
+              <option value="medium">中</option>
+              <option value="high">高</option>
+            </select>
           </div>
         </div>
       </div>
@@ -227,7 +243,7 @@ const convertType = ref<'task' | 'project'>('task')
 const convertingItem = ref<DailyItem | null>(null)
 
 const newItem = reactive({ title: '', description: '', category: '工作跟进', record_date: dayjs().format('YYYY-MM-DD') })
-const convertData = reactive({ project_id: '', name: '', description: '', estimated_end_date: '', development_cycle: '', due_date: '', parent_id: '' })
+const convertData = reactive({ project_id: '', name: '', description: '', estimated_end_date: '', development_cycle: '', due_date: '', parent_id: '', priority: 'medium' as string })
 
 const categories = ['工作跟进', '项目跟进']
 
@@ -269,7 +285,7 @@ const filteredGroups = computed(() => {
 const canConvert = computed(() => {
   if (convertStep.value !== 2) return false
   if (convertType.value === 'task') return !!convertData.name
-  return !!convertData.name && !!convertData.estimated_end_date && !!convertData.development_cycle
+  return !!convertData.name
 })
 
 function formatDate(date: string) {
@@ -327,6 +343,7 @@ function openConvert(item: DailyItem) {
   convertData.development_cycle = ''
   convertData.due_date = ''
   convertData.parent_id = ''
+  convertData.priority = 'medium'
   parentSearchText.value = ''
   parentDropdownOpen.value = false
   showConvertModal.value = true
@@ -351,6 +368,7 @@ async function doConvert() {
         description: convertData.description,
         project_id: null,
         status: 'doing',
+        priority: convertData.priority as 'low' | 'medium' | 'high',
         due_date: convertData.due_date || null,
       })
       await dailyStore.markConverted(convertingItem.value.id, 'task', task.id)
@@ -361,6 +379,7 @@ async function doConvert() {
         description: convertData.description || convertingItem.value.description,
         estimated_end_date: convertData.estimated_end_date,
         development_cycle: convertData.development_cycle,
+        priority: convertData.priority as 'low' | 'medium' | 'high',
         parent_id: convertData.parent_id || null,
       })
       await dailyStore.markConverted(convertingItem.value.id, 'project', project.id)

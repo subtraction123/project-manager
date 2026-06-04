@@ -41,6 +41,7 @@
               </span>
               <span class="text-xs text-text-muted">截止: {{ node.project.estimated_end_date }}</span>
               <span v-if="node.project.development_cycle" class="text-xs text-text-muted">周期: {{ node.project.development_cycle }}</span>
+              <span class="text-xs px-1.5 py-0.5 rounded font-medium" :class="priorityBadgeClass(node.project.priority)">{{ priorityLabel(node.project.priority) }}</span>
             </div>
           </div>
           <div class="flex items-center gap-3 ml-4 flex-shrink-0">
@@ -76,7 +77,8 @@
                 <span :class="['text-xs px-2 py-0.5 rounded font-medium', phaseTagClass(child.phase)]">
                   {{ child.phase || '需求调研' }}
                 </span>
-                <span class="text-xs text-text-muted">截止: {{ child.estimated_end_date }}</span>
+                <span class="text-xs text-text-muted">截止: {{ child.estimated_end_date || '-' }}</span>
+                <span class="text-xs px-1.5 py-0.5 rounded font-medium" :class="priorityBadgeClass(child.priority)">{{ priorityLabel(child.priority) }}</span>
               </div>
             </div>
             <div class="flex items-center gap-3 ml-4 flex-shrink-0">
@@ -136,18 +138,26 @@
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-text-primary mb-1.5">预计完成时间 <span class="text-red-500">*</span></label>
+            <label class="block text-sm font-medium text-text-primary mb-1.5">预计完成时间</label>
             <input v-model="newProject.estimated_end_date" type="date" class="w-full px-3 py-2.5 border border-[#e0e4e8] rounded-lg text-sm focus:border-primary focus:outline-none bg-[#fafbfc]">
           </div>
           <div>
-            <label class="block text-sm font-medium text-text-primary mb-1.5">开发周期（人天） <span class="text-red-500">*</span></label>
+            <label class="block text-sm font-medium text-text-primary mb-1.5">开发周期（人天）</label>
             <input v-model="newProject.development_cycle" class="w-full px-3 py-2.5 border border-[#e0e4e8] rounded-lg text-sm focus:border-primary focus:outline-none bg-[#fafbfc]" placeholder="如：15人天">
           </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-text-primary mb-1.5">优先级</label>
+          <select v-model="newProject.priority" class="w-full px-3 py-2.5 border border-[#e0e4e8] rounded-lg text-sm focus:border-primary focus:outline-none bg-[#fafbfc]">
+            <option value="low">低</option>
+            <option value="medium">中</option>
+            <option value="high">高</option>
+          </select>
         </div>
       </div>
       <template #footer>
         <button @click="showCreateModal = false" class="px-5 py-2.5 border border-[#e0e4e8] rounded-lg text-sm text-text-secondary hover:bg-gray-50">取消</button>
-        <button @click="createProject" :disabled="!newProject.name || !newProject.estimated_end_date || !newProject.development_cycle" class="px-6 py-2.5 bg-gradient-to-br from-[#0052CC] to-[#0077FF] text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed">确认创建</button>
+        <button @click="createProject" :disabled="!newProject.name" class="px-6 py-2.5 bg-gradient-to-br from-[#0052CC] to-[#0077FF] text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed">确认创建</button>
       </template>
     </BaseModal>
   </div>
@@ -175,6 +185,7 @@ const riskProjectIds = ref(new Set<string>())
 
 const filterTabs = [
   { key: 'all', label: '全部' },
+  { key: '待排期', label: '待排期' },
   { key: '需求调研', label: '需求调研' },
   { key: '方案设计', label: '方案设计' },
   { key: '实施配置', label: '实施配置' },
@@ -184,6 +195,7 @@ const filterTabs = [
 ]
 
 const phases = [
+  { value: '待排期', label: '待排期', baseClass: 'bg-gray-50 text-gray-500', selectedClass: 'bg-gray-500 text-white' },
   { value: '需求调研', label: '需求调研', baseClass: 'bg-blue-50 text-blue-500', selectedClass: 'bg-blue-500 text-white' },
   { value: '方案设计', label: '方案设计', baseClass: 'bg-purple-50 text-purple-500', selectedClass: 'bg-purple-500 text-white' },
   { value: '实施配置', label: '实施配置', baseClass: 'bg-cyan-50 text-cyan-500', selectedClass: 'bg-cyan-500 text-white' },
@@ -233,22 +245,24 @@ function handleParentBlur() {
 }
 
 const newProject = reactive({
-  name: '', description: '', estimated_end_date: '', development_cycle: '', phase: '需求调研', parent_id: '',
+  name: '', description: '', estimated_end_date: '', development_cycle: '', phase: '需求调研', priority: 'medium' as string, parent_id: '',
 })
 
 function getPhaseProgress(project: { status?: string; phase?: string }): number {
   if (project.status === 'archived' || project.status === 'terminated') return 100
   const map: Record<string, number> = {
+    '待排期': 0,
     '需求调研': 10,
     '方案设计': 30,
     '实施配置': 70,
     '上线': 90,
   }
-  return map[project.phase || ''] ?? 10
+  return map[project.phase || ''] ?? 0
 }
 
 function phaseTagClass(phase?: string) {
   const map: Record<string, string> = {
+    '待排期': 'bg-gray-50 text-gray-500',
     '需求调研': 'bg-blue-50 text-blue-500',
     '方案设计': 'bg-purple-50 text-purple-500',
     '实施配置': 'bg-cyan-50 text-cyan-500',
@@ -256,6 +270,16 @@ function phaseTagClass(phase?: string) {
   }
   if (phase === 'terminated') return 'bg-red-50 text-red-500'
   return map[phase || ''] || map['需求调研']
+}
+
+function priorityLabel(p?: string) {
+  const map: Record<string, string> = { high: '高', medium: '中', low: '低' }
+  return map[p || ''] || '中'
+}
+
+function priorityBadgeClass(p?: string) {
+  const map: Record<string, string> = { high: 'bg-red-50 text-red-500', medium: 'bg-amber-50 text-amber-500', low: 'bg-gray-100 text-gray-500' }
+  return map[p || ''] || map['medium']
 }
 
 function toggleExpand(id: string) {
@@ -267,13 +291,14 @@ function toggleExpand(id: string) {
 }
 
 async function createProject() {
-  if (!newProject.name || !newProject.estimated_end_date || !newProject.development_cycle) return
+  if (!newProject.name) return
   await projectStore.createProject({
     name: newProject.name,
     description: newProject.description,
     estimated_end_date: newProject.estimated_end_date,
     development_cycle: newProject.development_cycle,
     phase: newProject.phase,
+    priority: newProject.priority as 'low' | 'medium' | 'high',
     parent_id: newProject.parent_id || null,
   })
   showCreateModal.value = false
@@ -282,6 +307,7 @@ async function createProject() {
   newProject.estimated_end_date = ''
   newProject.development_cycle = ''
   newProject.phase = '需求调研'
+  newProject.priority = 'medium'
   newProject.parent_id = ''
   parentSearchText.value = ''
   parentDropdownOpen.value = false

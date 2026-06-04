@@ -21,6 +21,7 @@ export interface Project {
   start_date: string | null
   phase: string
   parent_id: string | null
+  priority: 'low' | 'medium' | 'high'
   status: 'active' | 'archived' | 'terminated'
   created_at: string
   updated_at: string

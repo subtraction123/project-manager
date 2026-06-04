@@ -31,11 +31,15 @@
         </div>
         <div class="flex px-5 py-3">
           <div class="w-24 text-sm text-text-muted font-medium flex-shrink-0">预计完成</div>
-          <div class="flex-1 text-sm text-text-primary">{{ project.estimated_end_date }}</div>
+          <div class="flex-1 text-sm text-text-primary">{{ project.estimated_end_date || '-' }}</div>
         </div>
         <div class="flex px-5 py-3">
           <div class="w-24 text-sm text-text-muted font-medium flex-shrink-0">开发周期（人天）</div>
           <div class="flex-1 text-sm text-text-primary">{{ project.development_cycle || '-' }}</div>
+        </div>
+        <div class="flex px-5 py-3">
+          <div class="w-24 text-sm text-text-muted font-medium flex-shrink-0">优先级</div>
+          <div class="flex-1 text-sm text-text-primary">{{ priorityLabel(project.priority) }}</div>
         </div>
         <div class="flex px-5 py-3">
           <div class="w-24 text-sm text-text-muted font-medium flex-shrink-0">当前阶段</div>
@@ -78,6 +82,14 @@
         <div>
           <label class="block text-sm font-medium text-text-primary mb-1.5">开发周期（人天）</label>
           <input v-model="editForm.development_cycle" class="w-full px-3 py-2.5 border border-[#e0e4e8] rounded-lg text-sm focus:border-primary focus:outline-none bg-[#fafbfc]" placeholder="如：15人天">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-text-primary mb-1.5">优先级</label>
+          <select v-model="editForm.priority" class="w-full px-3 py-2.5 border border-[#e0e4e8] rounded-lg text-sm focus:border-primary focus:outline-none bg-[#fafbfc]">
+            <option value="low">低</option>
+            <option value="medium">中</option>
+            <option value="high">高</option>
+          </select>
         </div>
         <div class="relative">
           <label class="block text-sm font-medium text-text-primary mb-1.5">父级项目</label>
@@ -282,6 +294,7 @@ const projectId = computed(() => route.params.id as string)
 const project = computed(() => projectStore.getById(projectId.value))
 
 const phases = [
+  { value: '待排期', label: '待排期', baseClass: 'bg-gray-50 text-gray-500', selectedClass: 'bg-gray-500 text-white' },
   { value: '需求调研', label: '需求调研', baseClass: 'bg-blue-50 text-blue-500', selectedClass: 'bg-blue-500 text-white' },
   { value: '方案设计', label: '方案设计', baseClass: 'bg-purple-50 text-purple-500', selectedClass: 'bg-purple-500 text-white' },
   { value: '实施配置', label: '实施配置', baseClass: 'bg-cyan-50 text-cyan-500', selectedClass: 'bg-cyan-500 text-white' },
@@ -297,7 +310,7 @@ const childProjects = computed(() => {
   return projectStore.projects.filter(p => p.parent_id === projectId.value)
 })
 
-const editForm = reactive({ name: '', description: '', estimated_end_date: '', development_cycle: '', phase: '', parent_id: '', status: 'active' as Project['status'] })
+const editForm = reactive({ name: '', description: '', estimated_end_date: '', development_cycle: '', phase: '', parent_id: '', priority: 'medium' as Project['priority'], status: 'active' as Project['status'] })
 
 const availableParents = computed(() => {
   return projectStore.projects.filter(p => p.id !== projectId.value && p.phase !== '上线')
@@ -329,6 +342,11 @@ function phaseSelectedClass(phase?: string) {
   return p ? p.selectedClass : phases[0].selectedClass
 }
 
+function priorityLabel(p?: string) {
+  const map: Record<string, string> = { high: '高', medium: '中', low: '低' }
+  return map[p || ''] || '中'
+}
+
 function toggleEditMode() {
   if (editingInfo.value) {
     editingInfo.value = false
@@ -340,6 +358,7 @@ function toggleEditMode() {
       editForm.development_cycle = project.value.development_cycle
       editForm.phase = project.value.phase || '需求调研'
       editForm.parent_id = project.value.parent_id || ''
+      editForm.priority = (project.value.priority as Project['priority']) || 'medium'
       editForm.status = (project.value.status as Project['status']) || 'active'
       parentSearchText.value = ''
     }

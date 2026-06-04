@@ -128,6 +128,14 @@
                 <textarea v-model="detailForm.description" rows="4" class="w-full px-3 py-2.5 border border-[#e0e4e8] rounded-lg text-sm focus:border-primary focus:outline-none bg-[#fafbfc] resize-none" placeholder="请输入任务描述..."></textarea>
               </div>
               <div>
+                <label class="block text-sm font-medium text-text-primary mb-1.5">优先级</label>
+                <select v-model="detailForm.priority" class="w-full px-3 py-2.5 border border-[#e0e4e8] rounded-lg text-sm focus:border-primary focus:outline-none bg-[#fafbfc]">
+                  <option value="low">低</option>
+                  <option value="medium">中</option>
+                  <option value="high">高</option>
+                </select>
+              </div>
+              <div>
                 <label class="block text-sm font-medium text-text-primary mb-1.5">截止时间</label>
                 <input v-model="detailForm.due_date" type="date" class="w-full px-3 py-2.5 border border-[#e0e4e8] rounded-lg text-sm focus:border-primary focus:outline-none bg-[#fafbfc]">
               </div>
@@ -171,7 +179,7 @@ const newTask = reactive({
   title: '', description: '', project_id: '', priority: 'medium' as string, assignee: '', due_date: '',
 })
 const detailForm = reactive({
-  title: '', description: '', due_date: '',
+  title: '', description: '', due_date: '', priority: 'medium' as string,
 })
 
 const filteredTasks = computed(() => {
@@ -208,6 +216,7 @@ function openDetail(task: Task) {
   detailForm.title = task.title
   detailForm.description = task.description
   detailForm.due_date = task.due_date || ''
+  detailForm.priority = task.priority || 'medium'
 }
 
 async function saveTaskDetail() {
@@ -216,6 +225,7 @@ async function saveTaskDetail() {
     title: detailForm.title,
     description: detailForm.description,
     due_date: detailForm.due_date || null,
+    priority: detailForm.priority as Task['priority'],
   })
   detailTask.value = null
   ui.addToast({ type: 'success', message: '任务已更新' })

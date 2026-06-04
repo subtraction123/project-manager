@@ -34,8 +34,8 @@ export const useProjectStore = defineStore('project', () => {
     const id = generateId()
     const ts = now()
     await run(
-      `INSERT INTO projects (id, name, description, estimated_end_date, development_cycle, start_date, phase, parent_id, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO projects (id, name, description, estimated_end_date, development_cycle, start_date, phase, parent_id, priority, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         data.name || '',
@@ -45,6 +45,7 @@ export const useProjectStore = defineStore('project', () => {
         data.start_date || null,
         data.phase || '需求调研',
         data.parent_id || null,
+        data.priority || 'medium',
         data.status || 'active',
         ts,
         ts,
@@ -59,6 +60,7 @@ export const useProjectStore = defineStore('project', () => {
       start_date: data.start_date || null,
       phase: data.phase || '需求调研',
       parent_id: data.parent_id || null,
+      priority: (data.priority as Project['priority']) || 'medium',
       status: (data.status as Project['status']) || 'active',
       created_at: ts,
       updated_at: ts,
@@ -70,7 +72,7 @@ export const useProjectStore = defineStore('project', () => {
   async function updateProject(id: string, data: Partial<Project>) {
     const sets: string[] = []
     const params: any[] = []
-    const fields: (keyof Project)[] = ['name', 'description', 'estimated_end_date', 'development_cycle', 'start_date', 'phase', 'parent_id', 'status']
+    const fields: (keyof Project)[] = ['name', 'description', 'estimated_end_date', 'development_cycle', 'start_date', 'phase', 'parent_id', 'priority', 'status']
     for (const key of fields) {
       if (data[key] !== undefined) {
         sets.push(`${key} = ?`)

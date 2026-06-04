@@ -27,11 +27,12 @@ async function createTables(database: Database) {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       description TEXT DEFAULT '',
-      estimated_end_date TEXT NOT NULL,
-      development_cycle TEXT NOT NULL DEFAULT '',
+      estimated_end_date TEXT DEFAULT '',
+      development_cycle TEXT DEFAULT '',
       start_date TEXT,
       phase TEXT DEFAULT '需求调研',
       parent_id TEXT,
+      priority TEXT DEFAULT 'medium',
       status TEXT DEFAULT 'active',
       created_at TEXT DEFAULT (datetime('now','localtime')),
       updated_at TEXT DEFAULT (datetime('now','localtime'))
@@ -151,6 +152,35 @@ async function migrate(database: Database) {
       DROP TABLE tasks;
       ALTER TABLE tasks_new RENAME TO tasks;
       INSERT INTO _migrations (name) VALUES ('001_nullable_task_project_id');
+    `)
+  }
+
+  // Migration 002: add priority column to projects, make estimated_end_date/development_cycle optional
+  const done2 = await database.select<{ cnt: number }[]>(
+    "SELECT COUNT(*) as cnt FROM _migrations WHERE name = '002_project_priority_and_optional_dates'"
+  )
+  if ((done2 as any)[0]?.cnt === 0) {
+    await database.execute(`
+      CREATE TABLE IF NOT EXISTS projects_new (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        estimated_end_date TEXT DEFAULT '',
+        development_cycle TEXT DEFAULT '',
+        start_date TEXT,
+        phase TEXT DEFAULT '需求调研',
+        parent_id TEXT,
+        priority TEXT DEFAULT 'medium',
+        status TEXT DEFAULT 'active',
+        created_at TEXT DEFAULT (datetime('now','localtime')),
+        updated_at TEXT DEFAULT (datetime('now','localtime'))
+      );
+      INSERT INTO projects_new (id, name, description, estimated_end_date, development_cycle, start_date, phase, parent_id, priority, status, created_at, updated_at)
+        SELECT id, name, description, COALESCE(estimated_end_date, ''), COALESCE(development_cycle, ''), start_date, phase, parent_id, 'medium', status, created_at, updated_at
+        FROM projects;
+      DROP TABLE projects;
+      ALTER TABLE projects_new RENAME TO projects;
+      INSERT INTO _migrations (name) VALUES ('002_project_priority_and_optional_dates');
     `)
   }
 }
